@@ -1,0 +1,13 @@
+{
+  "what-is-jsx": {
+    "seconds": 57.68,
+    "voice": "Henrique (ElevenLabs)",
+    "model": "eleven_flash_v2_5",
+    "cuts": [
+      8.95,
+      20.26,
+      32.79,
+      46.21
+    ]
+  }
+}

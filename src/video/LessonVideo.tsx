@@ -1,4 +1,4 @@
-import { AbsoluteFill, Sequence, interpolate, useCurrentFrame } from "remotion";
+import { AbsoluteFill, Html5Audio, Sequence, interpolate, useCurrentFrame } from "remotion";
 import type { Lesson, Scene, TimelineEntry } from "../../shared/lesson";
 import { C, FONT } from "./theme";
 import { BulletsScene, CalloutScene, CompareScene, SummaryScene, TitleScene } from "./scenes/TextScenes";
@@ -6,7 +6,7 @@ import { CodeScene } from "./scenes/CodeScene";
 import { DiagramScene } from "./scenes/DiagramScene";
 import { TreeScene } from "./scenes/TreeScene";
 
-export type LessonVideoProps = { lesson: Lesson; timeline: TimelineEntry[] };
+export type LessonVideoProps = { lesson: Lesson; timeline: TimelineEntry[]; audioSrc?: string };
 
 function Background() {
   const frame = useCurrentFrame();
@@ -101,10 +101,11 @@ function renderScene(scene: Scene, duration: number) {
   }
 }
 
-export function LessonVideo({ lesson, timeline }: LessonVideoProps) {
+export function LessonVideo({ lesson, timeline, audioSrc }: LessonVideoProps) {
   return (
     <AbsoluteFill>
       <Background />
+      {audioSrc ? <Html5Audio src={audioSrc} /> : null}
       {lesson.scenes.map((scene, i) => (
         <Sequence key={i} from={timeline[i].from} durationInFrames={timeline[i].duration} name={`${i + 1}. ${scene.kind}`}>
           {renderScene(scene, timeline[i].duration)}

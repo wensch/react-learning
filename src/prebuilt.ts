@@ -21,3 +21,22 @@ export function loadPrebuilt(): Promise<Map<string, Lesson>> {
   });
   return cache;
 }
+
+export type AudioInfo = { src: string; seconds: number; voice: string; cuts?: number[] };
+
+let audioCache: Promise<Map<string, AudioInfo>> | undefined;
+
+/** Narrações gravadas (public/audio): id da pergunta → arquivo e duração. Opcional; sem manifest, só a voz do navegador. */
+export function loadAudioManifest(): Promise<Map<string, AudioInfo>> {
+  audioCache ??= fetch("/audio/manifest.json")
+    .then((r) => (r.ok ? r.json() : {}))
+    .catch(() => ({}))
+    .then((raw: Record<string, { seconds?: number; voice?: string; cuts?: number[] }>) => {
+      const map = new Map<string, AudioInfo>();
+      for (const [id, v] of Object.entries(raw ?? {})) {
+        if (typeof v?.seconds === "number" && v.seconds > 0) map.set(id, { src: `/audio/${id}.mp3`, seconds: v.seconds, voice: v.voice ?? "voz gravada", cuts: Array.isArray(v.cuts) ? v.cuts : undefined });
+      }
+      return map;
+    });
+  return audioCache;
+}

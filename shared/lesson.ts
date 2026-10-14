@@ -162,7 +162,32 @@ export function sceneSeconds(narrationText: string): number {
 
 export type TimelineEntry = { from: number; duration: number };
 
-export function planTimeline(lesson: Lesson): { entries: TimelineEntry[]; totalFrames: number } {
+/**
+ * Sem áudio: a duração de cada cena é estimada pelo texto.
+ * Com áudio (narração gravada de uma vez): a duração total é a do áudio, repartida entre as cenas
+ * na proporção do tamanho da narração de cada uma (a fala tem ritmo quase constante).
+ */
+export function planTimeline(lesson: Lesson, audioSeconds?: number, cuts?: number[]): { entries: TimelineEntry[]; totalFrames: number } {
+  if (audioSeconds && audioSeconds > 0) {
+    const tail = Math.round(0.8 * FPS); // respiro final depois da última palavra
+    const total = Math.round(audioSeconds * FPS) + tail;
+    // Pontos de troca medidos no áudio (npm run align:audio): uma entrada a menos que o número de cenas.
+    if (cuts && cuts.length === lesson.scenes.length - 1 && cuts.every((c, i) => c > (cuts[i - 1] ?? 0))) {
+      const bounds = [0, ...cuts.map((c) => Math.round(c * FPS)), total];
+      return { entries: bounds.slice(0, -1).map((from, i) => ({ from, duration: Math.max(1, bounds[i + 1] - from) })), totalFrames: total };
+    }
+    const weights = lesson.scenes.map((s) => Math.max(1, s.narration.length));
+    const sum = weights.reduce((a, b) => a + b, 0);
+    let from = 0;
+    const entries = weights.map((w, i) => {
+      const last = i === weights.length - 1;
+      const duration = last ? total - from : Math.max(1, Math.round((w / sum) * (total - tail)));
+      const entry = { from, duration };
+      from += duration;
+      return entry;
+    });
+    return { entries, totalFrames: Math.max(total, 1) };
+  }
   let from = 0;
   const entries = lesson.scenes.map((s) => {
     const duration = Math.round(sceneSeconds(s.narration) * FPS);

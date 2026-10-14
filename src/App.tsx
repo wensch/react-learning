@@ -3,7 +3,7 @@ import { fmtDuration, loadSaved, persist, requestLesson, SAMPLE, type SavedLesso
 import { LessonPlayer } from "./components/LessonPlayer";
 import { QuestionBank } from "./components/QuestionBank";
 import { normalizeQuestion, questionById } from "./bank";
-import { loadPrebuilt } from "./prebuilt";
+import { loadAudioManifest, loadPrebuilt, type AudioInfo } from "./prebuilt";
 import type { Lesson, LessonLength } from "../shared/lesson";
 
 const EXAMPLES = [
@@ -23,6 +23,7 @@ export function App() {
   const [tab, setTab] = useState<"videos" | "bank">("videos");
   const [length, setLength] = useState<LessonLength>("long");
   const [prebuilt, setPrebuilt] = useState<Map<string, Lesson>>(new Map());
+  const [audios, setAudios] = useState<Map<string, AudioInfo>>(new Map());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -38,6 +39,7 @@ export function App() {
 
   useEffect(() => {
     void loadPrebuilt().then(setPrebuilt).catch(() => {});
+    void loadAudioManifest().then(setAudios);
   }, []);
 
   useEffect(() => {
@@ -196,7 +198,7 @@ export function App() {
               <p>{length === "short" ? "Um vídeo curto leva cerca de 30 segundos a 1 minuto." : "Um vídeo de 3 a 5 minutos leva cerca de 1 a 2 minutos."} {elapsed}s</p>
             </div>
           ) : (
-            <LessonPlayer key={current.id} lesson={current.lesson} />
+            <LessonPlayer key={current.id} lesson={current.lesson} audio={preId ? audios.get(preId) : undefined} />
           )}
         </div>
       </main>

@@ -4,6 +4,7 @@ import { FPS, HEIGHT, WIDTH, planTimeline, type Lesson } from "../../shared/less
 import { LessonVideo } from "../video/LessonVideo";
 import { useNarration } from "../hooks/useNarration";
 import { fmtDuration } from "../lib";
+import type { AudioInfo } from "../prebuilt";
 
 const KIND_LABEL: Record<string, string> = {
   title: "Abertura",
@@ -16,13 +17,13 @@ const KIND_LABEL: Record<string, string> = {
   summary: "Resumo",
 };
 
-export function LessonPlayer({ lesson }: { lesson: Lesson }) {
+export function LessonPlayer({ lesson, audio }: { lesson: Lesson; audio?: AudioInfo }) {
   const playerRef = useRef<PlayerRef>(null);
-  const { entries, totalFrames } = useMemo(() => planTimeline(lesson), [lesson]);
+  const { entries, totalFrames } = useMemo(() => planTimeline(lesson, audio?.seconds, audio?.cuts), [lesson, audio?.seconds, audio?.cuts]);
   const [narrate, setNarrate] = useState(true);
   const [rate, setRate] = useState(1);
   const [chapter, setChapter] = useState(0);
-  const { supported, voiceName, failed } = useNarration({ playerRef, lesson, timeline: entries, enabled: narrate, rate });
+  const { supported, voiceName, failed } = useNarration({ playerRef, lesson, timeline: entries, enabled: narrate && !audio, rate });
 
   useEffect(() => {
     const player = playerRef.current;
@@ -54,7 +55,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
         <Player
           ref={playerRef}
           component={LessonVideo}
-          inputProps={{ lesson, timeline: entries }}
+          inputProps={{ lesson, timeline: entries, audioSrc: audio?.src }}
           durationInFrames={totalFrames}
           fps={FPS}
           compositionWidth={WIDTH}
@@ -76,10 +77,14 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
       </div>
 
       <div className="player-bar">
-        <label className="toggle">
-          <input type="checkbox" checked={narrate} onChange={(e) => setNarrate(e.target.checked)} disabled={!supported} />
-          <span>Narração em voz alta</span>
-        </label>
+        {audio ? (
+          <span className="toggle">🔊 Narração gravada: {audio.voice}</span>
+        ) : (
+          <label className="toggle">
+            <input type="checkbox" checked={narrate} onChange={(e) => setNarrate(e.target.checked)} disabled={!supported} />
+            <span>Narração em voz alta</span>
+          </label>
+        )}
         <label className="speed">
           Velocidade
           <select value={rate} onChange={(e) => setRate(Number(e.target.value))}>
@@ -91,7 +96,9 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
           </select>
         </label>
         <span className="hint">
-          {!supported
+          {audio
+            ? "Use o controle de volume do player para silenciar."
+            : !supported
             ? "Seu navegador não tem síntese de voz: use as legendas."
             : failed
               ? "Não consegui falar neste navegador (sem voz instalada). Seguindo só com legendas."

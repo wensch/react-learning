@@ -12,7 +12,8 @@
     "check": "tsx scripts/check-sample.ts",
     "preview": "vite preview",
     "import:questions": "tsx scripts/import-questions.ts",
-    "check:lessons": "tsx scripts/check-lessons.ts"
+    "check:lessons": "tsx scripts/check-lessons.ts",
+    "align:audio": "tsx scripts/align-audio.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

@@ -17,6 +17,10 @@ pergunta ──► servidor (Hono) ──► Claude API ──► roteiro em JSO
 
 Há uma aula de exemplo (`src/lessons/sample.ts`) que funciona sem chave de API.
 
+## Narração gravada (ElevenLabs)
+
+Um vídeo pronto pode ter a narração gravada em `public/audio/<id-da-pergunta>.mp3`, listada em `public/audio/manifest.json`. Quando existe, o player toca esse áudio (no lugar da voz do navegador) e as cenas acompanham a fala: `npm run align:audio -- <id>` (precisa do ffmpeg) detecta as pausas e grava no manifest o ponto exato de cada troca de cena. Hoje só `what-is-jsx` tem áudio (voz "Henrique", modelo `eleven_flash_v2_5`, MP3 mono de 64 kbps, cerca de 450 KB por vídeo). Os demais seguem com a voz do navegador.
+
 ## Vídeos prontos
 
 `data/lessons/*.json` traz **169 vídeos curtos (cerca de 1 minuto cada), em português**, já escritos para as perguntas de React básico, Hooks e React 18/19 (incluindo Redux e React Router) do banco. Na aba "Banco de perguntas", as que têm vídeo mostram um ▶ e podem ser filtradas em "Só com vídeo pronto". Tocam na hora, sem chave de API e sem custo.
