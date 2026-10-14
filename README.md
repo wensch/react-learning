@@ -17,6 +17,12 @@ pergunta ──► servidor (Hono) ──► Claude API ──► roteiro em JSO
 
 Há uma aula de exemplo (`src/lessons/sample.ts`) que funciona sem chave de API.
 
+## Vídeos prontos
+
+`data/lessons/*.json` traz **169 vídeos curtos (cerca de 1 minuto cada), em português**, já escritos para as perguntas de React básico, Hooks e React 18/19 (incluindo Redux e React Router) do banco. Na aba "Banco de perguntas", as que têm vídeo mostram um ▶ e podem ser filtradas em "Só com vídeo pronto". Tocam na hora, sem chave de API e sem custo.
+
+Cada arquivo é um objeto `{ "<id da pergunta>": { title, scenes } }`, no mesmo formato que a Claude gera pela API. Para conferir: `npm run check:lessons` (valida o formato, a duração de 40 a 110 s, ids de perguntas, linhas de código e diagramas). Ainda faltam vídeos para as demais perguntas do banco (o comando mostra quantas).
+
 ## Rodando
 
 ```bash
@@ -27,7 +33,7 @@ npm run dev               # web em http://localhost:5173 e API em :8787
 
 Para atualizar o banco de perguntas a partir do GitHub: `npm run import:questions` (ou `-- ./README.md` com um arquivo local).
 
-Outros comandos: `npm run typecheck`, `npm run build`, `npm run check` (valida a aula de exemplo e o schema enviado à Claude).
+Outros comandos: `npm run typecheck`, `npm run build`, `npm run check` (valida a aula de exemplo e o schema enviado à Claude), `npm run check:lessons` (valida os vídeos prontos).
 
 ## Estrutura
 
@@ -50,6 +56,6 @@ Outros comandos: `npm run typecheck`, `npm run build`, `npm run check` (valida a
 
 - **Fontes de perguntas.** O banco vem de [sudheerj/reactjs-interview-questions](https://github.com/sudheerj/reactjs-interview-questions) (MIT; veja `THIRD_PARTY_NOTICES.md`) e usa só os títulos. O artigo de 100 perguntas da GreatFrontend não foi importado: é conteúdo proprietário e, além disso, o domínio estava bloqueado na rede desta sessão.
 
-- **Voz.** A voz padrão é a do navegador (grátis, mas robótica). A narração fica atrás de um único ponto (`useNarration`), então dá para trocar por uma voz neural (por exemplo, uma voz clonada) gerando o áudio no servidor, sem mexer nas cenas.
+- **Voz.** A voz padrão é a do navegador (grátis, mas robótica). Se o navegador não tiver voz instalada, o vídeo segue sozinho, só com legendas. A narração fica atrás de um único ponto (`useNarration`), então dá para trocar por uma voz neural (por exemplo, uma voz clonada) gerando o áudio no servidor, sem mexer nas cenas.
 - **Licença do Remotion.** O Remotion é gratuito para pessoas físicas e pequenas equipes, mas exige licença paga para empresas maiores. Veja [remotion.dev/license](https://www.remotion.dev/license) antes de usar comercialmente.
 - **Custo.** Cada vídeo é uma chamada à Claude API (alguns milhares de tokens de saída).

@@ -77,8 +77,11 @@ export function TreeScene({ scene, duration }: SceneProps<SceneOf<"tree">>) {
         const s = spring({ frame: frame - stagger(i, placed.length, 0.02, 0.2) * duration, fps, config: { damping: 14, stiffness: 120 } });
         const on = hot.has(pl.node.id);
         const pulse = on ? 0.5 + 0.5 * Math.sin(frame / 6) : 0;
+        // Só componentes (maiúscula) viram <Tag />; pastas e arquivos aparecem como texto.
+        const text = /^[A-Z]/.test(pl.node.label) ? `<${pl.node.label} />` : pl.node.label;
+        const bw = Math.max(BOX_W, text.length * 15 + 40);
         return (
-          <div key={pl.node.id} style={{ position: "absolute", left: pl.x - BOX_W / 2 - 72, top: pl.y - BOX_H / 2 - 44, width: BOX_W, textAlign: "center", transform: `scale(${s})`, opacity: Math.min(1, s * 2) }}>
+          <div key={pl.node.id} style={{ position: "absolute", left: pl.x - bw / 2 - 72, top: pl.y - BOX_H / 2 - 44, width: bw, textAlign: "center", transform: `scale(${s})`, opacity: Math.min(1, s * 2) }}>
             <div
               style={{
                 ...card,
@@ -89,6 +92,7 @@ export function TreeScene({ scene, duration }: SceneProps<SceneOf<"tree">>) {
                 fontFamily: MONO,
                 fontSize: 25,
                 fontWeight: 700,
+                whiteSpace: "nowrap",
                 color: on ? "#1a1200" : C.text,
                 background: on ? C.warn : C.panel,
                 borderColor: on ? C.warn : C.line,
@@ -96,7 +100,7 @@ export function TreeScene({ scene, duration }: SceneProps<SceneOf<"tree">>) {
                 transform: `scale(${1 + pulse * 0.04})`,
               }}
             >
-              {`<${pl.node.label} />`}
+              {text}
             </div>
             {pl.node.badge ? (
               <div style={{ position: "absolute", top: -16, right: -22, fontFamily: MONO, fontSize: 18, fontWeight: 700, color: "#062a25", background: C.accent2, borderRadius: 999, padding: "3px 12px", whiteSpace: "nowrap", boxShadow: "0 4px 12px rgba(0,0,0,.4)" }}>
