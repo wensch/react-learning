@@ -10,7 +10,8 @@
     "build": "tsc --noEmit && vite build",
     "typecheck": "tsc --noEmit",
     "check": "tsx scripts/check-sample.ts",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "import:questions": "tsx scripts/import-questions.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

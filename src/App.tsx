@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { fmtDuration, loadSaved, persist, requestLesson, SAMPLE, type SavedLesson } from "./lib";
 import { LessonPlayer } from "./components/LessonPlayer";
+import { QuestionBank, normalizeQuestion } from "./components/QuestionBank";
 
 const EXAMPLES = [
   "Por que o useEffect roda duas vezes em desenvolvimento?",
@@ -16,9 +17,12 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [tab, setTab] = useState<"videos" | "bank">("videos");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   const all = [SAMPLE, ...saved];
+  const done = new Set(saved.map((l) => normalizeQuestion(l.question)));
   const current = all.find((l) => l.id === currentId) ?? SAMPLE;
 
   useEffect(() => {
@@ -84,6 +88,7 @@ export function App() {
             <label htmlFor="q">Sua pergunta</label>
             <textarea
               id="q"
+              ref={textareaRef}
               rows={4}
               maxLength={600}
               placeholder="Ex.: Por que meu componente renderiza duas vezes?"
@@ -114,8 +119,26 @@ export function App() {
           </form>
 
           <div className="library">
-            <h2>Seus vídeos</h2>
-            <ul>
+            <div className="tabs" role="tablist">
+              <button role="tab" aria-selected={tab === "videos"} className={tab === "videos" ? "tab active" : "tab"} onClick={() => setTab("videos")}>
+                Seus vídeos
+              </button>
+              <button role="tab" aria-selected={tab === "bank"} className={tab === "bank" ? "tab active" : "tab"} onClick={() => setTab("bank")}>
+                Banco de perguntas
+              </button>
+            </div>
+            {tab === "bank" ? (
+              <QuestionBank
+                done={done}
+                disabled={loading}
+                onPick={(q) => {
+                  setQuestion(q);
+                  textareaRef.current?.focus();
+                  textareaRef.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+                }}
+              />
+            ) : (
+            <ul className="lib-list">
               {all.map((l) => (
                 <li key={l.id} className={l.id === currentId ? "lib-item active" : "lib-item"}>
                   <button onClick={() => setCurrentId(l.id)} disabled={loading}>
@@ -132,6 +155,7 @@ export function App() {
                 </li>
               ))}
             </ul>
+            )}
           </div>
         </aside>
 
