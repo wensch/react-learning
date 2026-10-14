@@ -45,7 +45,7 @@ export function parseToc(markdown: string): QuestionBank["questions"] {
     if (seen.has(anchor)) continue;
     seen.add(anchor);
     questions.push({
-      id: `sj-${questions.length + 1}`,
+      id: anchor,
       question: clean(q[1]),
       topic,
       url: `https://github.com/${SOURCE}#${anchor}`,

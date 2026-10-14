@@ -1,13 +1,24 @@
 import { useMemo, useState } from "react";
-import bankData from "../../data/questions.json";
-import { topicLabel, type QuestionBank as Bank } from "../../shared/questions";
+import { topicLabel } from "../../shared/questions";
+import { bank, normalizeQuestion as norm } from "../bank";
 
-const bank = bankData as Bank;
 const PAGE = 30;
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
 
-export function QuestionBank({ done, disabled, onPick }: { done: Set<string>; disabled: boolean; onPick: (question: string) => void }) {
+export function QuestionBank({
+  done,
+  ready,
+  disabled,
+  onPick,
+  onWatch,
+}: {
+  done: Set<string>;
+  ready: Set<string>;
+  disabled: boolean;
+  onPick: (question: string) => void;
+  onWatch: (id: string) => void;
+}) {
   const [query, setQuery] = useState("");
+  const [onlyReady, setOnlyReady] = useState(false);
   const [topic, setTopic] = useState("all");
   const [shown, setShown] = useState(PAGE);
 
@@ -19,8 +30,8 @@ export function QuestionBank({ done, disabled, onPick }: { done: Set<string>; di
 
   const filtered = useMemo(() => {
     const needle = norm(query);
-    return bank.questions.filter((q) => (topic === "all" || q.topic === topic) && (!needle || norm(q.question).includes(needle)));
-  }, [query, topic]);
+    return bank.questions.filter((q) => (topic === "all" || q.topic === topic) && (!onlyReady || ready.has(q.id)) && (!needle || norm(q.question).includes(needle)));
+  }, [query, topic, onlyReady, ready]);
 
   const pickRandom = () => {
     const pool = filtered.filter((q) => !done.has(norm(q.question)));
@@ -56,6 +67,10 @@ export function QuestionBank({ done, disabled, onPick }: { done: Set<string>; di
             </option>
           ))}
         </select>
+        <label className="toggle small-toggle">
+          <input type="checkbox" checked={onlyReady} onChange={(e) => { setOnlyReady(e.target.checked); setShown(PAGE); }} />
+          <span>Só com vídeo pronto ({ready.size})</span>
+        </label>
         <button type="button" className="btn secondary small" onClick={pickRandom} disabled={disabled || filtered.length === 0}>
           🎲 Sortear uma que ainda não vi
         </button>
@@ -73,6 +88,11 @@ export function QuestionBank({ done, disabled, onPick }: { done: Set<string>; di
                   {seen ? " · ✓ já gerado" : ""}
                 </span>
               </button>
+              {ready.has(q.id) ? (
+                <button type="button" className="bank-watch" onClick={() => onWatch(q.id)} disabled={disabled} title="Assistir o vídeo pronto" aria-label="Assistir o vídeo pronto">
+                  ▶
+                </button>
+              ) : null}
               <a className="bank-src" href={q.url} target="_blank" rel="noreferrer" title="Ver a resposta escrita na fonte" aria-label="Ver na fonte">
                 ↗
               </a>
@@ -93,4 +113,3 @@ export function QuestionBank({ done, disabled, onPick }: { done: Set<string>; di
   );
 }
 
-export { norm as normalizeQuestion };

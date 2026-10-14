@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { LessonSchema, estimatedSeconds, sanitizeLesson, type Lesson } from "../shared/lesson";
-import { SYSTEM_PROMPT, userPrompt } from "./prompt";
+import { LessonSchema, estimatedSeconds, sanitizeLesson, type Lesson, type LessonLength } from "../shared/lesson";
+import { systemPrompt, userPrompt } from "./prompt";
 
 const MODEL = "claude-opus-5-5";
 
@@ -17,7 +17,7 @@ export class LessonError extends Error {
 let client: Anthropic | undefined;
 const getClient = () => (client ??= new Anthropic());
 
-export async function generateLesson(question: string): Promise<{ lesson: Lesson; seconds: number }> {
+export async function generateLesson(question: string, length: LessonLength = "long"): Promise<{ lesson: Lesson; seconds: number }> {
   try {
     // Beta só para o `fallbacks`: se o classificador de segurança recusar, a API tenta o modelo de reserva.
     const response = await getClient().beta.messages.parse({
@@ -25,7 +25,7 @@ export async function generateLesson(question: string): Promise<{ lesson: Lesson
       max_tokens: 16000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      system: [{ type: "text", text: SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+      system: [{ type: "text", text: systemPrompt(length), cache_control: { type: "ephemeral" } }],
       messages: [{ role: "user", content: userPrompt(question) }],
       output_config: { effort: "medium", format: zodOutputFormat(LessonSchema) },
     });
@@ -41,7 +41,7 @@ export async function generateLesson(question: string): Promise<{ lesson: Lesson
     }
 
     const lesson = sanitizeLesson(response.parsed_output);
-    if (lesson.scenes.length < 3) throw new LessonError("O roteiro veio curto demais. Tente de novo.", 502);
+    if (lesson.scenes.length < (length === "short" ? 4 : 8)) throw new LessonError("O roteiro veio curto demais. Tente de novo.", 502);
     return { lesson, seconds: estimatedSeconds(lesson) };
   } catch (err) {
     if (err instanceof LessonError) throw err;

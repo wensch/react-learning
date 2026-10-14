@@ -18,6 +18,7 @@ export function useNarration(opts: {
   const { playerRef, lesson, timeline, enabled, rate } = opts;
   const supported = typeof window !== "undefined" && "speechSynthesis" in window;
   const [voiceName, setVoiceName] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const rateRef = useRef(rate);
   rateRef.current = rate;
 
@@ -49,6 +50,8 @@ export function useNarration(opts: {
       return 0;
     };
 
+    setFailed(false);
+    let broken = false; // o navegador não consegue falar: segue só com legendas
     let current = -1; // cena cuja fala já foi iniciada
     let token = 0; // invalida callbacks de falas canceladas
     let speaking = false;
@@ -70,9 +73,9 @@ export function useNarration(opts: {
     };
 
     const speak = (i: number) => {
+      const my = ++token; // invalida a fala anterior antes de cancelá-la
       clearTimers();
       synth.cancel();
-      const my = ++token;
       const u = new SpeechSynthesisUtterance(lesson.scenes[i].narration);
       u.lang = "pt-BR";
       u.rate = rateRef.current;
@@ -91,18 +94,35 @@ export function useNarration(opts: {
             if (sceneEnd(i) - player.getCurrentFrame() > 20) advance(i);
           }, 450);
       };
+      const fail = () => {
+        if (my !== token || broken) return;
+        broken = true;
+        speaking = false;
+        clearTimers();
+        synth.cancel();
+        setFailed(true);
+        // Não deixa o vídeo preso nem acelerado: volta a seguir o relógio normal.
+        if (held) {
+          held = false;
+          player.play();
+        }
+      };
       u.onend = done;
-      u.onerror = done;
+      u.onerror = (ev) => {
+        // Cancelamentos que nós mesmos pedimos não são falha.
+        if (ev.error === "canceled" || ev.error === "interrupted") return;
+        fail();
+      };
       u.onstart = () => clearTimeout(startTimer);
       speaking = true;
       synth.speak(u);
       // Redes de segurança: se o navegador não fala (sem voz, bloqueado) ou trava, o vídeo não pode ficar preso.
-      startTimer = setTimeout(done, 2500);
+      startTimer = setTimeout(fail, 4000);
       maxTimer = setTimeout(done, (words(lesson.scenes[i].narration) / 1.2 / rateRef.current + 4) * 1000);
     };
 
     const onFrame = (e: { detail: { frame: number } }) => {
-      if (!player.isPlaying()) return;
+      if (broken || !player.isPlaying()) return;
       const frame = e.detail.frame;
       const i = sceneAt(frame);
       if (i !== current) {
@@ -156,5 +176,5 @@ export function useNarration(opts: {
     };
   }, [playerRef, lesson, timeline, enabled, supported]);
 
-  return { supported, voiceName };
+  return { supported, voiceName, failed };
 }

@@ -5,7 +5,7 @@ import { SceneFrame, card, useSceneProgress, type SceneProps } from "./common";
 
 const BOX_W = 176;
 const BOX_H = 58;
-const AREA = { x: 72, y: 130, w: 1136, h: 330 };
+const AREA = { x: 72, y: 150, w: 1136, h: 320 };
 
 type N = SceneOf<"tree">["nodes"][number];
 type Placed = { node: N; x: number; y: number; depth: number };
@@ -106,7 +106,7 @@ export function TreeScene({ scene, duration }: SceneProps<SceneOf<"tree">>) {
           </div>
         );
       })}
-      <div style={{ position: "absolute", left: 0, right: 0, top: 470, textAlign: "center", fontSize: 34, fontWeight: 650, color: C.warn, opacity: caption ? 1 : 0 }}>{caption}</div>
+      <div style={{ position: "absolute", left: 0, right: 0, top: 480, textAlign: "center", fontSize: 34, fontWeight: 650, color: C.warn, opacity: caption ? 1 : 0 }}>{caption}</div>
     </SceneFrame>
   );
 }

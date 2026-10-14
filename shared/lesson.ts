@@ -132,6 +132,8 @@ export const LessonSchema = z.object({
   scenes: z.array(SceneSchema).describe("14 a 22 cenas. A primeira é 'title' e a última é 'summary'."),
 });
 
+export type LessonLength = "short" | "long";
+
 export type Scene = z.infer<typeof SceneSchema>;
 export type Lesson = z.infer<typeof LessonSchema>;
 export type SceneOf<K extends Scene["kind"]> = Extract<Scene, { kind: K }>;

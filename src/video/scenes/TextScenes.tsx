@@ -139,7 +139,10 @@ function Side({ side, tint, delay, duration }: { side: SceneOf<"compare">["left"
   const { frame } = useSceneProgress(duration);
   const { fps } = useVideoConfig();
   const s = spring({ frame: frame - delay, fps, config: { damping: 17, stiffness: 90 } });
-  const lines = side.code ? side.code.split("\n").length : 0;
+  const codeLines = side.code ? side.code.split("\n") : [];
+  const maxLen = Math.max(0, ...codeLines.map((l) => l.length));
+  // Cada coluna tem ~500px úteis para o código (monoespaçada: ~0.6em por caractere).
+  const codeSize = Math.max(14, Math.min(codeLines.length > 3 ? 21 : 24, Math.floor(500 / (0.6 * Math.max(maxLen, 1)))));
   return (
     <div style={{ ...card, flex: 1, padding: "26px 30px", borderColor: tint, opacity: Math.min(1, s * 1.5), transform: `translateY(${(1 - s) * 40}px)`, minWidth: 0 }}>
       <div style={{ color: tint, fontSize: 26, fontWeight: 800, textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 14 }}>{side.title}</div>
@@ -150,7 +153,7 @@ function Side({ side, tint, delay, duration }: { side: SceneOf<"compare">["left"
       </ul>
       {side.code ? (
         <div style={{ marginTop: 20, background: "#0a1024", borderRadius: 14, padding: "16px 20px", border: `1px solid ${C.line}` }}>
-          <Code code={side.code} fontSize={lines > 3 ? 21 : 24} />
+          <Code code={side.code} fontSize={codeSize} />
         </div>
       ) : null}
     </div>

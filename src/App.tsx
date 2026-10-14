@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fmtDuration, loadSaved, persist, requestLesson, SAMPLE, type SavedLesson } from "./lib";
 import { LessonPlayer } from "./components/LessonPlayer";
-import { QuestionBank, normalizeQuestion } from "./components/QuestionBank";
+import { QuestionBank } from "./components/QuestionBank";
+import { normalizeQuestion, questionById } from "./bank";
+import { loadPrebuilt } from "./prebuilt";
+import type { Lesson, LessonLength } from "../shared/lesson";
 
 const EXAMPLES = [
   "Por que o useEffect roda duas vezes em desenvolvimento?",
@@ -18,12 +21,24 @@ export function App() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [tab, setTab] = useState<"videos" | "bank">("videos");
+  const [length, setLength] = useState<LessonLength>("long");
+  const [prebuilt, setPrebuilt] = useState<Map<string, Lesson>>(new Map());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const ready = useMemo(() => new Set(prebuilt.keys()), [prebuilt]);
   const all = [SAMPLE, ...saved];
   const done = new Set(saved.map((l) => normalizeQuestion(l.question)));
-  const current = all.find((l) => l.id === currentId) ?? SAMPLE;
+  const preId = currentId.startsWith("pre:") ? currentId.slice(4) : "";
+  const preLesson = preId ? prebuilt.get(preId) : undefined;
+  const current: SavedLesson =
+    preLesson && questionById(preId)
+      ? { id: currentId, question: questionById(preId)!.question, lesson: preLesson, seconds: 0, createdAt: 0 }
+      : (all.find((l) => l.id === currentId) ?? SAMPLE);
+
+  useEffect(() => {
+    void loadPrebuilt().then(setPrebuilt).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (!loading) return;
@@ -40,7 +55,7 @@ export function App() {
     const ctl = new AbortController();
     abortRef.current = ctl;
     try {
-      const { lesson, seconds } = await requestLesson(text, ctl.signal);
+      const { lesson, seconds } = await requestLesson(text, length, ctl.signal);
       const item: SavedLesson = { id: crypto.randomUUID(), question: text, lesson, seconds, createdAt: Date.now() };
       const next = [item, ...saved];
       setSaved(next);
@@ -99,6 +114,15 @@ export function App() {
               }}
               disabled={loading}
             />
+            <fieldset className="length" disabled={loading}>
+              <legend>Duração do vídeo</legend>
+              <label>
+                <input type="radio" name="length" checked={length === "short"} onChange={() => setLength("short")} /> Curto (~1 min)
+              </label>
+              <label>
+                <input type="radio" name="length" checked={length === "long"} onChange={() => setLength("long")} /> Completo (3 a 5 min)
+              </label>
+            </fieldset>
             <div className="examples">
               {EXAMPLES.map((ex) => (
                 <button type="button" key={ex} className="chip" onClick={() => setQuestion(ex)} disabled={loading}>
@@ -130,6 +154,8 @@ export function App() {
             {tab === "bank" ? (
               <QuestionBank
                 done={done}
+                ready={ready}
+                onWatch={(id) => setCurrentId(`pre:${id}`)}
                 disabled={loading}
                 onPick={(q) => {
                   setQuestion(q);
@@ -167,7 +193,7 @@ export function App() {
             <div className="loading" role="status" aria-live="polite">
               <div className="spinner" />
               <h3>{phase}…</h3>
-              <p>Gerar um vídeo de 3 a 5 minutos leva em torno de 1 a 2 minutos. {elapsed}s</p>
+              <p>{length === "short" ? "Um vídeo curto leva cerca de 30 segundos a 1 minuto." : "Um vídeo de 3 a 5 minutos leva cerca de 1 a 2 minutos."} {elapsed}s</p>
             </div>
           ) : (
             <LessonPlayer key={current.id} lesson={current.lesson} />

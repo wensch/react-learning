@@ -22,7 +22,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const [narrate, setNarrate] = useState(true);
   const [rate, setRate] = useState(1);
   const [chapter, setChapter] = useState(0);
-  const { supported, voiceName } = useNarration({ playerRef, lesson, timeline: entries, enabled: narrate, rate });
+  const { supported, voiceName, failed } = useNarration({ playerRef, lesson, timeline: entries, enabled: narrate, rate });
 
   useEffect(() => {
     const player = playerRef.current;
@@ -93,7 +93,9 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
         <span className="hint">
           {!supported
             ? "Seu navegador não tem síntese de voz: use as legendas."
-            : narrate
+            : failed
+              ? "Não consegui falar neste navegador (sem voz instalada). Seguindo só com legendas."
+              : narrate
               ? voiceName
                 ? `Voz: ${voiceName}`
                 : "Nenhuma voz em português encontrada: vai usar a padrão do sistema."

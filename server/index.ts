@@ -9,6 +9,7 @@ app.get("/api/health", (c) => c.json({ ok: true, hasKey: Boolean(process.env.ANT
 app.post("/api/lesson", async (c) => {
   const body = await c.req.json().catch(() => null);
   const question = typeof body?.question === "string" ? body.question.trim() : "";
+  const length = body?.length === "short" ? "short" : "long";
   if (question.length < 5 || question.length > 600) {
     return c.json({ error: "Escreva uma pergunta entre 5 e 600 caracteres." }, 400);
   }
@@ -17,7 +18,7 @@ app.post("/api/lesson", async (c) => {
   }
   try {
     const started = Date.now();
-    const result = await generateLesson(question);
+    const result = await generateLesson(question, length);
     console.log(`[lesson] "${question.slice(0, 60)}" → ${result.lesson.scenes.length} cenas, ~${result.seconds}s, gerado em ${Math.round((Date.now() - started) / 1000)}s`);
     return c.json(result);
   } catch (err) {

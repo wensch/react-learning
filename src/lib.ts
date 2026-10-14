@@ -1,4 +1,4 @@
-import { LessonSchema, sanitizeLesson, type Lesson } from "../shared/lesson";
+import { LessonSchema, sanitizeLesson, type Lesson, type LessonLength } from "../shared/lesson";
 import { SAMPLE_QUESTION, sampleLesson } from "./lessons/sample";
 
 export type SavedLesson = {
@@ -42,13 +42,13 @@ export function persist(list: SavedLesson[]) {
   }
 }
 
-export async function requestLesson(question: string, signal: AbortSignal): Promise<{ lesson: Lesson; seconds: number }> {
+export async function requestLesson(question: string, length: LessonLength, signal: AbortSignal): Promise<{ lesson: Lesson; seconds: number }> {
   let res: Response;
   try {
     res = await fetch("/api/lesson", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ question }),
+      body: JSON.stringify({ question, length }),
       signal,
     });
   } catch (err) {
